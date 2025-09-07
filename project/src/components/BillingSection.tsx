@@ -35,8 +35,8 @@ export default function BillingSection({
   const handleUpdateCharge = (chargeData: Omit<Charge, 'id'>) => {
     if (editingCharge) {
       onUpdateCharge({ ...chargeData, id: editingCharge.id });
+      setEditingCharge(null);
     }
-    setEditingCharge(null);
   };
 
   const handleAddPayment = (paymentData: Omit<Payment, 'id'>) => {
@@ -45,10 +45,10 @@ export default function BillingSection({
   };
 
   const unpaidCharges = charges.filter(charge => !charge.isPaid);
-  const paidCharges = charges.filter(charge => charge.isPaid);
 
   return (
     <div className="p-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <CreditCard className="h-5 w-5 text-blue-600 mr-2" />
@@ -81,7 +81,6 @@ export default function BillingSection({
           </div>
           <span className="text-2xl font-bold text-blue-900">${customer.totalCharges.toFixed(2)}</span>
         </div>
-        
         <div className="bg-green-50 rounded-lg p-4">
           <div className="flex items-center">
             <Receipt className="h-5 w-5 text-green-600" />
@@ -89,19 +88,15 @@ export default function BillingSection({
           </div>
           <span className="text-2xl font-bold text-green-900">${customer.totalPaid.toFixed(2)}</span>
         </div>
-        
         <div className={`rounded-lg p-4 ${customer.balance > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
           <div className="flex items-center">
             <DollarSign className={`h-5 w-5 ${customer.balance > 0 ? 'text-red-600' : 'text-gray-600'}`} />
-            <span className={`ml-2 text-sm font-medium ${customer.balance > 0 ? 'text-red-600' : 'text-gray-600'}`}>
-              Balance
-            </span>
+            <span className={`ml-2 text-sm font-medium ${customer.balance > 0 ? 'text-red-600' : 'text-gray-600'}`}>Balance</span>
           </div>
           <span className={`text-2xl font-bold ${customer.balance > 0 ? 'text-red-900' : 'text-gray-900'}`}>
             ${customer.balance.toFixed(2)}
           </span>
         </div>
-        
         <div className="bg-yellow-50 rounded-lg p-4">
           <div className="flex items-center">
             <Receipt className="h-5 w-5 text-yellow-600" />
@@ -113,8 +108,8 @@ export default function BillingSection({
         </div>
       </div>
 
+      {/* Unpaid Charges */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Unpaid Charges */}
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">Unpaid Charges</h3>
@@ -122,13 +117,11 @@ export default function BillingSection({
           <div className="p-4">
             {unpaidCharges.length > 0 ? (
               <div className="space-y-3">
-                {unpaidCharges.map((charge) => (
+                {unpaidCharges.map(charge => (
                   <div key={charge.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
                     <div>
                       <div className="font-medium text-gray-900">{charge.description}</div>
-                      <div className="text-sm text-gray-600">
-                        {new Date(charge.date).toLocaleDateString()}
-                      </div>
+                      <div className="text-sm text-gray-600">{new Date(charge.date).toLocaleDateString()}</div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <span className="font-bold text-red-600">${charge.amount.toFixed(2)}</span>
@@ -156,16 +149,12 @@ export default function BillingSection({
           <div className="p-4">
             {payments.length > 0 ? (
               <div className="space-y-3">
-                {payments.slice(0, 5).map((payment) => (
+                {payments.slice(0, 5).map(payment => (
                   <div key={payment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div>
                       <div className="font-medium text-gray-900">{payment.method.replace('_', ' ').toUpperCase()}</div>
-                      <div className="text-sm text-gray-600">
-                        {new Date(payment.date).toLocaleDateString()}
-                      </div>
-                      {payment.reference && (
-                        <div className="text-xs text-gray-500">Ref: {payment.reference}</div>
-                      )}
+                      <div className="text-sm text-gray-600">{new Date(payment.date).toLocaleDateString()}</div>
+                      {payment.reference && <div className="text-xs text-gray-500">Ref: {payment.reference}</div>}
                     </div>
                     <span className="font-bold text-green-600">${payment.amount.toFixed(2)}</span>
                   </div>
@@ -178,7 +167,7 @@ export default function BillingSection({
         </div>
       </div>
 
-      {/* All Charges History */}
+      {/* Charge History */}
       <div className="mt-6 bg-white rounded-lg border border-gray-200">
         <div className="p-4 border-b border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900">Charge History</h3>
@@ -195,21 +184,13 @@ export default function BillingSection({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {charges.map((charge) => (
+              {charges.map(charge => (
                 <tr key={charge.id}>
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {new Date(charge.date).toLocaleDateString()}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-900">{new Date(charge.date).toLocaleDateString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">{charge.description}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                    ${charge.amount.toFixed(2)}
-                  </td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">${charge.amount.toFixed(2)}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      charge.isPaid 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${charge.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {charge.isPaid ? 'Paid' : 'Unpaid'}
                     </span>
                   </td>
@@ -230,6 +211,7 @@ export default function BillingSection({
         </div>
       </div>
 
+      {/* Forms */}
       {(showChargeForm || editingCharge) && (
         <ChargeForm
           customer={customer}
@@ -242,7 +224,6 @@ export default function BillingSection({
           }}
         />
       )}
-
       {showPaymentForm && (
         <PaymentForm
           customer={customer}
