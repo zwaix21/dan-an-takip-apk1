@@ -19,48 +19,38 @@ export default function DayView({
   const dateStr = date.toISOString().split('T')[0];
   
   const getEventsForTime = (time: string) => {
-    return events.filter(event => 
-      event.date === dateStr && event.startTime === time
-    );
+    return events.filter(event => event.date === dateStr && event.startTime === time);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('tr-TR', { 
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString('tr-TR', { 
       weekday: 'long', 
       year: 'numeric',
       month: 'long', 
       day: 'numeric'
     });
-  };
 
   const isToday = date.toDateString() === new Date().toDateString();
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Gün başlığı */}
       <div className={`p-6 border-b border-gray-200 ${isToday ? 'bg-blue-50' : 'bg-gray-50'}`}>
         <h2 className={`text-xl font-semibold ${isToday ? 'text-blue-900' : 'text-gray-900'}`}>
           {formatDate(date)}
         </h2>
-        {isToday && (
-          <p className="text-blue-600 text-sm mt-1">Bugün</p>
-        )}
+        {isToday && <p className="text-blue-600 text-sm mt-1">Bugün</p>}
       </div>
 
-      {/* Zaman slotları */}
       <div className="max-h-[700px] overflow-y-auto">
         {timeSlots.map((slot) => {
           const slotEvents = getEventsForTime(slot.time);
-          
+
           return (
-            <div 
-              key={slot.time} 
-              className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors"
-            >
+            <div key={slot.time} className="flex border-b border-gray-100 hover:bg-gray-50 transition-colors">
               <div className="w-20 p-4 text-center border-r border-gray-200 bg-gray-50">
                 <span className="text-sm font-medium text-gray-600">{slot.time}</span>
               </div>
-              
+
               <div
                 onClick={() => onTimeSlotClick(dateStr, slot.time)}
                 className="flex-1 p-4 min-h-[80px] cursor-pointer relative"
@@ -72,13 +62,10 @@ export default function DayView({
                     {slotEvents.map((event) => (
                       <div
                         key={event.id}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEventClick(event);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); onEventClick(event); }}
                         className="p-3 rounded-lg cursor-pointer hover:opacity-80 transition-opacity border-l-4"
                         style={{ 
-                          backgroundColor: event.color + '15', 
+                          backgroundColor: `${event.color}20`, 
                           borderLeftColor: event.color 
                         }}
                       >
@@ -91,7 +78,7 @@ export default function DayView({
                         {event.description && (
                           <p className="text-sm text-gray-600 mt-1">{event.description}</p>
                         )}
-                        {event.attendees && event.attendees.length > 0 && (
+                        {('attendees' in event) && event.attendees?.length > 0 && (
                           <div className="flex items-center mt-2">
                             <span className="text-xs text-gray-500">
                               Katılımcılar: {event.attendees.join(', ')}
@@ -102,10 +89,9 @@ export default function DayView({
                           <span 
                             className="inline-block w-2 h-2 rounded-full mr-2"
                             style={{ backgroundColor: event.color }}
-                          ></span>
+                          />
                           <span className="text-xs text-gray-500">
-                            {event.type === 'appointment' ? 'Randevu' : 
-                             event.type === 'meeting' ? 'Toplantı' : 'Mola'}
+                            {event.type === 'appointment' ? 'Randevu' : event.type === 'meeting' ? 'Toplantı' : 'Mola'}
                           </span>
                         </div>
                       </div>
