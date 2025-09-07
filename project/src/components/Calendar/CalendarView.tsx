@@ -1,0 +1,204 @@
+import React, { useState, useEffect } from 'react';
+import { CalendarEvent, TimeSlot, Client, Appointment } from '../../types';
+import CalendarHeader from './CalendarHeader';
+import WeekView from './WeekView';
+import DayView from './DayView';
+import AppointmentForm from './AppointmentForm';
+import EventDetails from './EventDetails';
+
+interface CalendarViewProps {
+  clients: Client[];
+  appointments: Appointment[];
+  onAddAppointment: (appointment: Omit<Appointment, 'id'>) => void;
+  onUpdateAppointment: (appointment: Appointment) => void;
+  onDeleteAppointment: (appointmentId: string) => void;
+}
+
+export default function CalendarView({
+  clients,
+  appointments,
+  onAddAppointment,
+  onUpdateAppointment,
+  onDeleteAppointment
+}: CalendarViewProps) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'week' | 'day'>('week');
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // Convert appointments to calendar events
+  useEffect(() => {
+    const calendarEvents: CalendarEvent[] = appointments.map(appointment => ({
+      id: appointment.id,
+      title: `${appointment.clientName} - ${appointment.sessionType}`,
+      description: appointment.notes,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      date: appointment.date,
+      color: getStatusColor(appointment.status),
+      type: 'appointment' as const,
+      clientId: appointment.clientId,
+      appointmentId: appointment.id
+    }));
+    setEvents(calendarEvents);
+  }, [appointments]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return '#10B981';
+      case 'cancelled': return '#EF4444';
+      case 'no-show': return '#F59E0B';
+      default: return '#3B82F6';
+    }
+  };
+
+  const generateTimeSlots = (): TimeSlot[] => {
+    const slots: TimeSlot[] = [];
+    for (let hour = 8; hour < 20; hour++) {
+      slots.push({
+        time: `${hour.toString().padStart(2, '0')}:00`,
+        hour,
+        minute: 0
+      });
+      slots.push({
+        time: `${hour.toString().padStart(2, '0')}:30`,
+        hour,
+        minute: 30
+      });
+    }
+    return slots;
+  };
+
+  const getWeekDays = (date: Date): Date[] => {
+    const startOfWeek = new Date(date);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+    startOfWeek.setDate(diff);
+
+    const weekDays: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(startOfWeek);
+      day.setDate(startOfWeek.getDate() + i);
+      weekDays.push(day);
+    }
+    return weekDays;
+  };
+
+  const handlePrevious = () => {
+    const newDate = new Date(currentDate);
+    if (view === 'week') {
+      newDate.setDate(currentDate.getDate() - 7);
+    } else {
+      newDate.setDate(currentDate.getDate() - 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const handleNext = () => {
+    const newDate = new Date(currentDate);
+    if (view === 'week') {
+      newDate.setDate(currentDate.getDate() + 7);
+    } else {
+      newDate.setDate(currentDate.getDate() + 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const handleTimeSlotClick = (date: string, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setShowAppointmentForm(true);
+  };
+
+  const handleEventClick = (event: CalendarEvent) => {
+    if (event.appointmentId) {
+      const appointment = appointments.find(apt => apt.id === event.appointmentId);
+      if (appointment) {
+        setEditingAppointment(appointment);
+        setShowAppointmentForm(true);
+      }
+    }
+  };
+
+  const handleSaveAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
+    if (editingAppointment) {
+      onUpdateAppointment({ ...appointmentData, id: editingAppointment.id });
+    } else {
+      onAddAppointment(appointmentData);
+    }
+    setShowAppointmentForm(false);
+    setEditingAppointment(null);
+    setSelectedDate('');
+    setSelectedTime('');
+  };
+
+  const handleDeleteAppointment = () => {
+    if (editingAppointment) {
+      onDeleteAppointment(editingAppointment.id);
+      setShowAppointmentForm(false);
+      setEditingAppointment(null);
+    }
+  };
+
+  const timeSlots = generateTimeSlots();
+  const weekDays = getWeekDays(currentDate);
+
+  return (
+    <div className="flex-1 flex flex-col bg-gray-50">
+      <CalendarHeader
+        currentDate={currentDate}
+        view={view}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+        onToday={handleToday}
+        onViewChange={setView}
+        onAddEvent={() => setShowAppointmentForm(true)}
+      />
+
+      <div className="flex-1 p-6 overflow-auto">
+        {view === 'week' ? (
+          <WeekView
+            weekDays={weekDays}
+            events={events}
+            timeSlots={timeSlots}
+            onTimeSlotClick={handleTimeSlotClick}
+            onEventClick={handleEventClick}
+          />
+        ) : (
+          <DayView
+            date={currentDate}
+            events={events.filter(e => e.date === currentDate.toISOString().split('T')[0])}
+            timeSlots={timeSlots}
+            onTimeSlotClick={handleTimeSlotClick}
+            onEventClick={handleEventClick}
+          />
+        )}
+      </div>
+
+      {showAppointmentForm && (
+        <AppointmentForm
+          clients={clients}
+          appointment={editingAppointment}
+          selectedDate={selectedDate}
+          selectedTime={selectedTime}
+          onSave={handleSaveAppointment}
+          onCancel={() => {
+            setShowAppointmentForm(false);
+            setEditingAppointment(null);
+            setSelectedDate('');
+            setSelectedTime('');
+          }}
+          onDelete={editingAppointment ? handleDeleteAppointment : undefined}
+        />
+      )}
+    </div>
+  );
+}
