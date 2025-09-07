@@ -1,8 +1,10 @@
 {
+  "id": "com.github.KULLANICI_ADIN.randevuyonetim",
   "name": "Randevu Yönetim Sistemi",
   "short_name": "Randevu",
   "description": "Danışan randevu ve ücret takip sistemi",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3B82F6",
