@@ -27,9 +27,9 @@ export default function MonthView({ days, onDayClick, onEventClick }: MonthViewP
           <div
             key={`${day.date}-${index}`}
             onClick={() => onDayClick(day.date)}
-            className={`min-h-[120px] p-2 border-r border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-              !day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-            } ${day.isToday ? 'bg-blue-50' : ''}`}
+            className={`min-h-[120px] p-2 border-r border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors 
+                        ${!day.isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''} 
+                        ${day.isToday ? 'bg-blue-50' : ''}`}
           >
             <div className="flex items-center justify-between mb-2">
               <span
@@ -46,15 +46,16 @@ export default function MonthView({ days, onDayClick, onEventClick }: MonthViewP
             </div>
 
             <div className="space-y-1">
-              {day.events.slice(0, 3).map((event) => (
+              {day.events.slice(0, 3).map((event: CalendarEvent) => (
                 <div
                   key={event.id}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEventClick(event);
                   }}
-                  className={`text-xs p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity`}
+                  className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ backgroundColor: event.color + '20', color: event.color }}
+                  title={event.title}
                 >
                   <div className="font-medium">{event.startTime}</div>
                   <div className="truncate">{event.title}</div>
