@@ -20,6 +20,7 @@ export default function CalendarHeader({
   onViewChange,
   onAddEvent
 }: CalendarHeaderProps) {
+
   const formatDate = () => {
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
@@ -57,24 +58,15 @@ export default function CalendarHeader({
           </div>
           
           <div className="flex items-center space-x-2">
-            <button
-              onClick={onPrevious}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={onPrevious} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <ChevronLeft className="h-5 w-5 text-gray-600" />
             </button>
             
-            <button
-              onClick={onToday}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={onToday} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
               Bugün
             </button>
             
-            <button
-              onClick={onNext}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
+            <button onClick={onNext} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <ChevronRight className="h-5 w-5 text-gray-600" />
             </button>
           </div>
