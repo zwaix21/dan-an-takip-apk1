@@ -4,7 +4,6 @@ import CalendarHeader from './CalendarHeader';
 import WeekView from './WeekView';
 import DayView from './DayView';
 import AppointmentForm from './AppointmentForm';
-import EventDetails from './EventDetails';
 
 interface CalendarViewProps {
   clients: Client[];
@@ -24,15 +23,13 @@ export default function CalendarView({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'week' | 'day'>('week');
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
 
-  // Convert appointments to calendar events
   useEffect(() => {
-    const calendarEvents: CalendarEvent[] = appointments.map(appointment => ({
+    setEvents(appointments.map(appointment => ({
       id: appointment.id,
       title: `${appointment.clientName} - ${appointment.sessionType}`,
       description: appointment.notes,
@@ -40,11 +37,10 @@ export default function CalendarView({
       endTime: appointment.endTime,
       date: appointment.date,
       color: getStatusColor(appointment.status),
-      type: 'appointment' as const,
+      type: 'appointment',
       clientId: appointment.clientId,
       appointmentId: appointment.id
-    }));
-    setEvents(calendarEvents);
+    })));
   }, [appointments]);
 
   const getStatusColor = (status: string) => {
@@ -59,16 +55,8 @@ export default function CalendarView({
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = [];
     for (let hour = 8; hour < 20; hour++) {
-      slots.push({
-        time: `${hour.toString().padStart(2, '0')}:00`,
-        hour,
-        minute: 0
-      });
-      slots.push({
-        time: `${hour.toString().padStart(2, '0')}:30`,
-        hour,
-        minute: 30
-      });
+      slots.push({ time: `${hour.toString().padStart(2, '0')}:00`, hour, minute: 0 });
+      slots.push({ time: `${hour.toString().padStart(2, '0')}:30`, hour, minute: 30 });
     }
     return slots;
   };
@@ -76,77 +64,29 @@ export default function CalendarView({
   const getWeekDays = (date: Date): Date[] => {
     const startOfWeek = new Date(date);
     const day = startOfWeek.getDay();
-    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
     startOfWeek.setDate(diff);
-
-    const weekDays: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
-      weekDays.push(day);
-    }
-    return weekDays;
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      return d;
+    });
   };
 
-  const handlePrevious = () => {
-    const newDate = new Date(currentDate);
-    if (view === 'week') {
-      newDate.setDate(currentDate.getDate() - 7);
-    } else {
-      newDate.setDate(currentDate.getDate() - 1);
-    }
-    setCurrentDate(newDate);
-  };
+  const handlePrevious = () => setCurrentDate(d => { const nd = new Date(d); nd.setDate(d.getDate() - (view==='week'?7:1)); return nd; });
+  const handleNext = () => setCurrentDate(d => { const nd = new Date(d); nd.setDate(d.getDate() + (view==='week'?7:1)); return nd; });
+  const handleToday = () => setCurrentDate(new Date());
 
-  const handleNext = () => {
-    const newDate = new Date(currentDate);
-    if (view === 'week') {
-      newDate.setDate(currentDate.getDate() + 7);
-    } else {
-      newDate.setDate(currentDate.getDate() + 1);
-    }
-    setCurrentDate(newDate);
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleTimeSlotClick = (date: string, time: string) => {
-    setSelectedDate(date);
-    setSelectedTime(time);
-    setShowAppointmentForm(true);
-  };
-
-  const handleEventClick = (event: CalendarEvent) => {
-    if (event.appointmentId) {
-      const appointment = appointments.find(apt => apt.id === event.appointmentId);
-      if (appointment) {
-        setEditingAppointment(appointment);
-        setShowAppointmentForm(true);
-      }
-    }
-  };
+  const handleTimeSlotClick = (date: string, time: string) => { setSelectedDate(date); setSelectedTime(time); setShowAppointmentForm(true); };
+  const handleEventClick = (event: CalendarEvent) => { if (event.appointmentId) { const apt = appointments.find(a => a.id===event.appointmentId); if(apt){setEditingAppointment(apt); setShowAppointmentForm(true);} } };
 
   const handleSaveAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
-    if (editingAppointment) {
-      onUpdateAppointment({ ...appointmentData, id: editingAppointment.id });
-    } else {
-      onAddAppointment(appointmentData);
-    }
-    setShowAppointmentForm(false);
-    setEditingAppointment(null);
-    setSelectedDate('');
-    setSelectedTime('');
+    if (editingAppointment) onUpdateAppointment({ ...appointmentData, id: editingAppointment.id });
+    else onAddAppointment(appointmentData);
+    setShowAppointmentForm(false); setEditingAppointment(null); setSelectedDate(''); setSelectedTime('');
   };
 
-  const handleDeleteAppointment = () => {
-    if (editingAppointment) {
-      onDeleteAppointment(editingAppointment.id);
-      setShowAppointmentForm(false);
-      setEditingAppointment(null);
-    }
-  };
+  const handleDeleteAppointment = () => { if(editingAppointment){ onDeleteAppointment(editingAppointment.id); setShowAppointmentForm(false); setEditingAppointment(null); } };
 
   const timeSlots = generateTimeSlots();
   const weekDays = getWeekDays(currentDate);
@@ -164,22 +104,10 @@ export default function CalendarView({
       />
 
       <div className="flex-1 p-6 overflow-auto">
-        {view === 'week' ? (
-          <WeekView
-            weekDays={weekDays}
-            events={events}
-            timeSlots={timeSlots}
-            onTimeSlotClick={handleTimeSlotClick}
-            onEventClick={handleEventClick}
-          />
+        {view==='week' ? (
+          <WeekView weekDays={weekDays} events={events} timeSlots={timeSlots} onTimeSlotClick={handleTimeSlotClick} onEventClick={handleEventClick} />
         ) : (
-          <DayView
-            date={currentDate}
-            events={events.filter(e => e.date === currentDate.toISOString().split('T')[0])}
-            timeSlots={timeSlots}
-            onTimeSlotClick={handleTimeSlotClick}
-            onEventClick={handleEventClick}
-          />
+          <DayView date={currentDate} events={events.filter(e => e.date === currentDate.toISOString().split('T')[0])} timeSlots={timeSlots} onTimeSlotClick={handleTimeSlotClick} onEventClick={handleEventClick} />
         )}
       </div>
 
@@ -190,12 +118,7 @@ export default function CalendarView({
           selectedDate={selectedDate}
           selectedTime={selectedTime}
           onSave={handleSaveAppointment}
-          onCancel={() => {
-            setShowAppointmentForm(false);
-            setEditingAppointment(null);
-            setSelectedDate('');
-            setSelectedTime('');
-          }}
+          onCancel={() => { setShowAppointmentForm(false); setEditingAppointment(null); setSelectedDate(''); setSelectedTime(''); }}
           onDelete={editingAppointment ? handleDeleteAppointment : undefined}
         />
       )}
